@@ -3,6 +3,12 @@ nodebb-plugin-import-ubb
 
 An esoTalk forum exporter to be required by [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import), based on [nodebb-plugin-import-ubb](https://github.com/akhoury/nodebb-plugin-import-ubb).
 
+### BEWARE
+
+Might crash for large numbers of records, especially posts! Use at your own risk! (It’s MIT license anyway, so what do I care?).
+
+Due to esoTalks database structure (and my poor MySQL skills) I wasn’t able to properly select the posts without the topic-starting posts in my query, so I have to detect and throw them out via javascript. Since I do not know how many of them will be there at query time, I can’t apply the limit to the query properly. Thus, **all** posts are selected everytime and the array is sliced in JavaScript after the starting posts are thrown out! Which means that, if you have a lot of posts in your forum, you might need a lot of ram to do this ...
+
 ### What is this?
 
 It's __just__ an exporter of [esoTalk Threads data](http://esotalk.org/), that provides an API that [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import) can use to export source forum data and import it to NodeBB's database. So, it's not really a conventional nodebb-plugin.
