@@ -39,26 +39,13 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
         var prefix = Exporter.config('prefix');
         var startms = +new Date();
         var query = 'SELECT '
-            + prefix + 'USERS.USER_ID as _uid, '
-            + prefix + 'USERS.USER_LOGIN_NAME as _username, '
-            + prefix + 'USERS.USER_DISPLAY_NAME as _alternativeUsername, '
-            + prefix + 'USERS.USER_REGISTRATION_EMAIL as _registrationEmail, '
-            + prefix + 'USERS.USER_MEMBERSHIP_LEVEL as _level, '
-            + prefix + 'USERS.USER_REGISTERED_ON as _joindate, '
-            + prefix + 'USERS.USER_IS_banned as _banned, '
-            + prefix + 'USER_PROFILE.USER_REAL_EMAIL as _email, '
-            + prefix + 'USER_PROFILE.USER_SIGNATURE as _signature, '
-            + prefix + 'USER_PROFILE.USER_HOMEPAGE as _website, '
-            + prefix + 'USER_PROFILE.USER_OCCUPATION as _occupation, '
-            + prefix + 'USER_PROFILE.USER_LOCATION as _location, '
-            + prefix + 'USER_PROFILE.USER_AVATAR as _picture, '
-            + prefix + 'USER_PROFILE.USER_TITLE as _title, '
-            + prefix + 'USER_PROFILE.USER_RATING as _reputation, '
-            + prefix + 'USER_PROFILE.USER_TOTAL_RATES as _profileviews, '
-            + prefix + 'USER_PROFILE.USER_BIRTHDAY as _birthday '
+            + prefix + '_member.memberId as _uid, '
+            + prefix + '_member.username as _username, '
+            + prefix + '_member.email as _email, '
+            + prefix + '_member.joinTime as _joindate, '
+            + prefix + '_member.account as _level '
 
-            + 'FROM ' + prefix + 'USERS, ' + prefix + 'USER_PROFILE '
-            + 'WHERE ' + prefix + 'USERS.USER_ID = ' + prefix + 'USER_PROFILE.USER_ID '
+            + 'FROM ' + prefix + '_member '
             + (start >= 0 && limit >= 0 ? 'LIMIT ' + start + ',' + limit : '');
 
 
@@ -78,19 +65,16 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
                 //normalize here
                 var map = {};
                 rows.forEach(function(row) {
-                    // nbb forces signatures to be less than 150 chars
-                    // keeping it HTML see https://github.com/akhoury/nodebb-plugin-import#markdown-note
-                    row._signature = Exporter.truncateStr(row._signature || '', 150);
-    
                     // from unix timestamp (s) to JS timestamp (ms)
                     row._joindate = ((row._joindate || 0) * 1000) || startms;
     
                     // lower case the email for consistency
                     row._email = (row._email || '').toLowerCase();
-    
-                    // I don't know about you about I noticed a lot my users have incomplete urls, urls like: http://
-                    row._picture = Exporter.validateUrl(row._picture);
-                    row._website = Exporter.validateUrl(row._website);
+
+                    // get rid of 'member' and 'suspended' values, which are meaningless in nodebb,
+                    // but keep the administrators.
+                    if (row._level != 'administrator')
+                        row._level = '';
     
                     map[row._uid] = row;
                 });
@@ -110,11 +94,12 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
         var prefix = Exporter.config('prefix');
         var startms = +new Date();
         var query = 'SELECT '
-            + prefix + 'FORUMS.FORUM_ID as _cid, '
-            + prefix + 'FORUMS.FORUM_TITLE as _name, '
-            + prefix + 'FORUMS.FORUM_DESCRIPTION as _description, '
-            + prefix + 'FORUMS.FORUM_CREATED_ON as _timestamp '
-            + 'FROM ' + prefix + 'FORUMS '
+            + prefix + '_channel.channelId as _cid, '
+            + prefix + '_channel.title as _name, '
+            + prefix + '_channel.slug as _slug, '
+            + prefix + '_channel.description as _description, '
+            + prefix + '_channel.parentId as _parentCid '
+            + 'FROM ' + prefix + '_channel '
             + (start >= 0 && limit >= 0 ? 'LIMIT ' + start + ',' + limit : '');
 
 
@@ -134,9 +119,11 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
                 //normalize here
                 var map = {};
                 rows.forEach(function(row) {
-                    row._name = row._name || 'Untitled Category '
+                    row._name = row._name || 'Untitled Category ';
                     row._description = row._description || 'No decsciption available';
                     row._timestamp = ((row._timestamp || 0) * 1000) || startms;
+                    // make it very clear when there is no parent
+                    if (row.parentCid == 0) row.parentCid = null;
     
                     map[row._cid] = row;
                 });
@@ -156,42 +143,33 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
         var startms = +new Date();
         var query =
             'SELECT '
-            + prefix + 'TOPICS.TOPIC_ID as _tid, '
+            + prefix + '_conversation.conversationId as _tid, '
 
             // aka category id, or cid
-            + prefix + 'TOPICS.FORUM_ID as _cid, '
+            + prefix + '_conversation.channelId as _cid, '
 
             // this is the 'parent-post'
             // see https://github.com/akhoury/nodebb-plugin-import#important-note-on-topics-and-posts
             // I don't really need it since I just do a simple join and get its content, but I will include for the reference
             // remember: this post is EXCLUDED in the getPosts() function
-            + prefix + 'TOPICS.POST_ID as _pid, '
+            + prefix + '_post.postId as _pid, '
 
-            + prefix + 'TOPICS.USER_ID as _uid, '
-            + prefix + 'TOPICS.TOPIC_VIEWS as _viewcount, '
-            + prefix + 'TOPICS.TOPIC_SUBJECT as _title, '
-            + prefix + 'TOPICS.TOPIC_CREATED_TIME as _timestamp, '
+            + prefix + '_conversation.startMemberId as _uid, '
+            + prefix + '_conversation.title as _title, '
+            + prefix + '_conversation.startTime as _timestamp, '
 
-            // maybe use that to skip
-            + prefix + 'TOPICS.TOPIC_IS_APPROVED as _approved, '
-
-            // todo:  figure out what this means,
-            + prefix + 'TOPICS.TOPIC_STATUS as _status, '
-
-            + prefix + 'TOPICS.TOPIC_IS_STICKY as _pinned, '
-
-            // I dont need it, but if it should be 0 per UBB logic, since this post is not replying to anything, it's the parent-post of the topic
-            + prefix + 'POSTS.POST_PARENT_ID as _post_replying_to, '
+            + prefix + '_conversation.sticky as _pinned, '
 
             // this should be == to the _tid on top of this query
-            + prefix + 'POSTS.TOPIC_ID as _post_tid, '
+            + prefix + '_post.conversationId as _post_tid, '
 
             // and there is the content I need !!
-            + prefix + 'POSTS.POST_BODY as _content '
+            + prefix + '_post.content as _content '
 
-            + 'FROM ' + prefix + 'TOPICS, ' + prefix + 'POSTS '
-            // see
-            + 'WHERE ' + prefix + 'TOPICS.TOPIC_ID=' + prefix + 'POSTS.TOPIC_ID '
+            + 'FROM ' + prefix + '_conversation, ' + prefix + '_post '
+            // _conversation in esotalk doesn’t have a pointer to the first post,
+            // so I’m selecting it by time. this feels a bit dangerous but seems to work.
+            + 'WHERE ' + prefix + '_conversation.startTime=' + prefix + '_post.time '
             // and this one must be a parent
             + 'AND ' + prefix + 'POSTS.POST_PARENT_ID=0 '
             + (start >= 0 && limit >= 0 ? 'LIMIT ' + start + ',' + limit : '');
@@ -233,27 +211,24 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
         var prefix = Exporter.config('prefix');
         var startms = +new Date();
         var query =
-            'SELECT POST_ID as _pid, '
-            + 'POST_PARENT_ID as _post_replying_to, '
-            + 'TOPIC_ID as _tid, '
-            + 'POST_POSTED_TIME as _timestamp, '
+            'SELECT ' + prefix + '_post.postId as _pid, '
+            + prefix + '_post.conversationId as _tid, '
+            + prefix + '_post.memberId as _uid, '
+            + prefix + '_post.time as _timestamp, '
             // not being used
-            + 'POST_SUBJECT as _subject, '
+            + prefix + '_post.title as _subject, '
 
-            + 'POST_BODY as _content, '
-            + 'USER_ID as _uid, '
+            + prefix + '_post.content as _content, '
 
-            // I couldn't tell what's the different, they're all HTML to me
-            + 'POST_MARKUP_TYPE as _markup, '
+            + prefix + '_conversation.startTime as _topic_timestamp'
 
-            // maybe use this one to skip
-            + 'POST_IS_APPROVED as _approved '
-
-            + 'FROM ' + prefix + 'POSTS '
+            + 'FROM ' + prefix + '_post, _conversation '
             // this post cannot be a its topic's main post, it MUST be a reply-post
             // see https://github.com/akhoury/nodebb-plugin-import#important-note-on-topics-and-posts
-            + 'WHERE POST_PARENT_ID > 0 '
-            + (start >= 0 && limit >= 0 ? 'LIMIT ' + start + ',' + limit : '');
+            // However, I’m throwing the main posts out below, can’t do it in mysql due to esoTalks
+            // database structure ... this will not work well for many records of course, so if you
+            // have a BIG esoTalk Forum, you should develop a better solution!
+            + 'WHERE _post.conversationId=_conversation.conversationId';
 
 
         if (!Exporter.connection) {
@@ -264,9 +239,25 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
 
         Exporter.connection.query(query,
             function(err, rows) {
+                var i;
                 if (err) {
                     Exporter.error(err);
                     return callback(err);
+                }
+
+                // throw out the topic-starting posts ...
+                i = 0;
+                while (i < rows.length) {
+                    while (rows[i]._timestamp == rows[i]._topic_timestamp) {
+                        rows.splice(i, 1);
+                    }
+                    delete rows[i]._topic_timestamp;
+                    ++i;
+                }
+
+                // cut to limits here - too late, i know ...
+                if (start >= 0 && limit >= 0) {
+                    rows = rows.slice(start, limit);
                 }
 
                 //normalize here
