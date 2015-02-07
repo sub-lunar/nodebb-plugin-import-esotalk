@@ -74,7 +74,7 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
                     // get rid of 'member' and 'suspended' values, which are meaningless in nodebb,
                     // but keep the administrators.
                     if (row._level != 'administrator')
-                        row._level = '';
+                        delete row._level;
     
                     map[row._uid] = row;
                 });
@@ -171,7 +171,7 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
             // so I’m selecting it by time. this feels a bit dangerous but seems to work.
             + 'WHERE ' + prefix + '_conversation.startTime=' + prefix + '_post.time '
             // and this one must be a parent
-            + 'AND ' + prefix + 'POSTS.POST_PARENT_ID=0 '
+            // + 'AND ' + prefix + 'POSTS.POST_PARENT_ID=0 '
             + (start >= 0 && limit >= 0 ? 'LIMIT ' + start + ',' + limit : '');
 
         if (!Exporter.connection) {
@@ -220,7 +220,7 @@ var logPrefix = '[nodebb-plugin-import-ubb]';
 
             + prefix + '_post.content as _content, '
 
-            + prefix + '_conversation.startTime as _topic_timestamp'
+            + prefix + '_conversation.startTime as _topic_timestamp '
 
             + 'FROM ' + prefix + '_post, _conversation '
             // this post cannot be a its topic's main post, it MUST be a reply-post
