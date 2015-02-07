@@ -1,37 +1,37 @@
 {
-    "name": "nodebb-plugin-import-esotalk",
-    "version": "0.0.0",
-    "description": "An esoTalk forum exporter to import-ready files",
-    "main": "./index.js",
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/sub-lunar/nodebb-plugin-import-esotalk"
-    },
-    "keywords": [
-        "esotalk",
-        "nodebb",
-        "plugin",
-        "migrate",
-        "convert",
-        "export",
-        "import"
-    ],
-    "author": {
-        "name": "Emanuel Tannert",
-        "email": "et@sub-lunar.com"
-    },
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/sub-lunar/nodebb-plugin-import-esotalk/issues"
-    },
-    "dependencies": {
-        "underscore": "~1.6.0",
-        "fs-extra": "~0.11.0",
-        "async": "~0.9.0",
-        "marked": "~0.3.2",
-        "mysql": "~2.4.2"
-    }
+  "name": "nodebb-plugin-import-esotalk",
+  "version": "0.0.1",
+  "description": "An esoTalk forum exporter to import-ready files",
+  "main": "./index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sub-lunar/nodebb-plugin-import-esotalk"
+  },
+  "keywords": [
+    "esotalk",
+    "nodebb",
+    "plugin",
+    "migrate",
+    "convert",
+    "export",
+    "import"
+  ],
+  "author": {
+    "name": "Emanuel Tannert",
+    "email": "et@sub-lunar.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sub-lunar/nodebb-plugin-import-esotalk/issues"
+  },
+  "dependencies": {
+    "underscore": "~1.6.0",
+    "fs-extra": "~0.11.0",
+    "async": "~0.9.0",
+    "marked": "~0.3.2",
+    "mysql": "~2.4.2"
+  }
 }
