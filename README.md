@@ -48,48 +48,47 @@ exporter.testrun({
 
 ```
 
-<!---
 ### What does it export?
 read carefully:
 
 - ####Users:
-    * `_username` YES. UBB for some reason allows duplicate users with same emails? so the first ones by ID orders will be saved, the rest will be skipped. (UBB appends [username]_dup[Number] next to the dups.. so those will be skipped too if the email is already used)
-    * `_alternativeUsername` YES. as the __UBB.User.UserDisplayName__, which [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import) will try to use if the username validation fails
-    * `_password` NO. UBB uses MD5, NodeBB uses base64 I think, so can't do, but if you use [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import) it will generate random passwords and hand them to you so can email them.
-    * `_level` (administrator and moderator) YES. Admins will stay Admins, and Moderators will stay Moderators, the catch here though is that each moderator is a moderator on ALL of the categories
-    * `_joindate` YES, UBB uses Seconds, the exported will convert to Milliseconds
-    * `_website` YES. if URL looks valid, it is exported, but it's not checked if 404s
-    * `_picture` YES. if URL looks valid, it is exported, but it's not checked if 404s, if not valid, it's set to "" and NodeBB will generate a gravatar URl for the user
-    * `_reputation` SORT-OF. assumed as the __UBB.User.raking__
-    * `_profileviews` SORT-OF. assumed as the __UBB.User.totalRanks__ I didn't find anything closer
-    * `_location` YES. migrated as is, clear text
-    * `_signature` YES. migrated as is (HTML -- read the [Markdown note](#markdown-note) below)
-    * `_banned` YES. it will stay banned, by username
-    * __Oh and__ UBB have a weird User with ID == 1, ******DONOTDELETE****** <= that's like the first user created, and somehow, in my UBB installation, it does own few topics and posts, this one will not be migrated, BUT [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import) will assigned these post to the to the NodeBB initial Admin created.
+    * `_uid` (esoTalk memberId) YES
+    * `_username` YES
+    * `_email` YES
+    * `_password` NO. Just to tell your users to reset their passwords after the migration. Or, if you use [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import) it can generate random passwords and hand them to you so can email them.
+    * `_level` (administrator) YES. Admins will stay Admins. Moderators can’t be preserved, because esoTalk doesn’t handle Moderators as account type, but through user groups.
+    * `_joindate` YES, esoTalk uses Seconds, the exported will convert to Milliseconds
+    * `_picture` NO. I didn’t find out where (if at all) the avatar urls are saved in esoTalk, and it’s not that important for me (I only have ~20 Users and only four of them have actually uploaded a picture).
+    * `_banned` NO.
 
 
-- ####Categories (AKA Forums per UBB Speak):
+- ####Categories (AKA Channels per esoTalk speak):
     * `_name` YES
+    * `_slug` YES
     * `_description` YES
 
-- ####Topics:
-    * `_cid` __(or its UBB category aka Forum id)__ YES (but if its parent Category is skipped, this topic gets skipped)
-    * `_uid` __(or its UBB user id)__ YES (but if its user is skipped, this topic gets skipped)
+- ####Topics (AKA Conversations per esoTalk speak):
+**BEWARE**: in esoTalk, there can be private Conversations that are only visible to certain users. After migration, they will be visible for everyone, like normal Topics!
+    * `_tid` (esoTalk conversationId) YES
+    * `_cid` (esoTalk channelId) YES
+    * `_pid` (esoTalk postId) YES
+    * `_uid` (esoTalk memberId) YES
     * `_title` YES
-    * `_content` __(or the 'parent-post` content of this topic)__ YES (HTML - read the [Markdown Note](#markdown-note) below)
-    * `_timestamp` YES, UBB uses Seconds, the exporter will convert to Milliseconds
+    * `_content` __(or the 'parent-post` content of this topic)__ YES (BB Code - read the [Markdown Note](#markdown-note) below)
+    * `_timestamp` YES, esoTalk uses Seconds, the exporter will convert to Milliseconds
     * `_pinned` YES (0 or 1) (I don't know how many you can pin in NodeBB)
     * `_viewcount` YES
 
 - ####Posts:
-    * `_pid` __(or its UBB post id)__
-    * `_tid` __(or its UBB parent topic id)__ YES (but if its parent topic is skipped, this post gets skipped)
-    * `_uid` __(or its UBB user id)__ YES (but if its user is skipped, this post is skipped)
-    * `_content` YES (HTML - read the [Markdown Note](#markdown-note) below)
-    * `_timestamp` YES, UBB uses Seconds, the exporter will convert to Milliseconds
+    * `_pid` (esoTalk postId) YES
+    * `_tid` (esoTalk conversationId) YES
+    * `_uid` (esoTalk memberId) YES
+    * `_timestamp` YES, esoTalk uses Seconds, the exporter will convert to Milliseconds
+    * `_subject` YES (esoTalk unnecessarily saves the (same) post.title (= title/subject of the conversation/topic) to every post)
+    * `_content` YES (BB Code - read the [Markdown Note](#markdown-note) below)
 
-### UBB Versions tested on:
-  - UBB 7.5.7
+### esoTalk Versions tested on:
+  - esoTalk 1.0.0g3
 
 ### Markdown note
 
@@ -98,4 +97,3 @@ read [nodebb-plugin-import#markdown-note](https://github.com/akhoury/nodebb-plug
 ### It's an exporter, why does it have 'import' in its title
 
 To keep the namespacing accurate, this __exporter__ is designed to export data for [nodebb-plugin-import](https://github.com/akhoury/nodebb-plugin-import) only, also for a 1 time use, so why do you care.
--->
