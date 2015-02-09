@@ -87,6 +87,9 @@ read carefully:
     * `_subject` YES (esoTalk unnecessarily saves the (same) post.title (= title/subject of the conversation/topic) to every post)
     * `_content` YES (BB Code - read the [Markdown Note](#markdown-note) below)
 
+- ####Attachments:
+    esoTalk allows file attachments to posts, and so does nodebb. However, the attachments are not preserved by this plugin! You will find them in the directory of your esoTalk installation under uploads/attachments. The files get renamed by esoTalk, so re-assigning them manually to the respective posts can be a bit of a pain. If you happen to have an idea how to preserve the attachments, feel free to fork/submit a pull request :)
+
 ### esoTalk Versions tested on:
   - esoTalk 1.0.0g3
 
